@@ -314,7 +314,7 @@
     }
 
     function saveApiKey(apiKey) {
-      if (apiKey.trim()) localStorage.setItem('api_key', apiKey);
+      if (apiKey.trim()) localStorage.setItem('stable_diffusion_3_api_key', apiKey);
     }
 
     function checkPoints(apiKey) {
@@ -384,7 +384,6 @@
     function handleApiKeyBlur() {
       const apiKey = $(this).val();
       if (apiKey) {
-        localStorage.setItem('api_key', apiKey);
         checkPoints(apiKey);
       }
     }
@@ -516,7 +515,7 @@
     }
 
     $(document).ready(function () {
-      const savedApiKey = localStorage.getItem('api_key');
+      const savedApiKey = localStorage.getItem('stable_diffusion_3_api_key');
       if (savedApiKey) {
         $('#api_key').val(savedApiKey);
         checkPoints(savedApiKey);
