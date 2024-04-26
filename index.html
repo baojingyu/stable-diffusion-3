@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Stable Diffusion 3.0 图片生成</title>
+  <style>
+    /* 添加CSS样式 */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 10px;
+      background-image: none;
+      /* 移除之前的背景图片 */
+      background-color: #f9f9f9;
+      /* 设置页面背景颜色 */
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #ccc;
+    }
+
+    h1 {
+      text-align: center;
+      color: #196cea;
+      margin-top: 2px;
+      /* 调整标题与顶部的间距 */
+    }
+
+    #account-points {
+      position: fixed;
+      top: 70px;
+      /* 调整积分信息位置 */
+      right: 10px;
+      background-color: #333;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+
+    #result {
+      overflow: auto;
+    }
+
+
+    label {
+      font-weight: bold;
+    }
+
+    textarea,
+    select,
+    input[type="text"],
+    input[type="number"],
+    input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      /* 增加内边距 */
+      margin-bottom: 15px;
+      /* 调整外边距 */
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-size: 16px;
+      /* 增加字体大小 */
+      line-height: 1.2;
+      /* 调整行高，使文本更加紧凑 */
+    }
+
+    button {
+      padding: 12px 24px;
+      /* 调整按钮内边距 */
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+
+
+    .negativePrompt-form {
+      display: block;
+    }
+
+    .image-options {
+      display: none;
+    }
+
+    .style_preset-options {
+      display: none;
+    }
+
+    .form-group {
+      margin-bottom: 2px;
+    }
+
+    .left-column {
+      width: 45%;
+      float: left;
+    }
+
+    /*占据页面宽度的 45%，并使其向右浮动，并且使用 Flexbox 让其内部元素可以自动换行*/
+    .right-column {
+      width: 45%;
+      float: right;
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .right-column .form-group {
+      flex: 1 1 auto;
+      margin: 0px;
+    }
+
+
+    .clear {
+      clear: both;
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+  <h1>Stable Diffusion 3.0 图片生成</h1>
+  <div id="account-points"></div>
+
+
+
+  <div class="left-column">
+    <div class="form-group">
+      <label for="api_key">API密钥(api Key):</label><a href="https://platform.stability.ai/account/keys"
+        target="_blank">点击这里获取API密钥(Click here to get the API key)</a>
+      <input type="text" id="api_key" value="">
+    </div>
+
+    <div class="form-group">
+      <label for="prompt">正面描述词(prompt):</label>
+      <textarea id="prompt" rows="5" cols="50" required maxlength="10000"
+        placeholder="要控制给定单词的权重，请使用格式(word:weight)，其中word是您想要控制权重的单词，weight是介于0和1之间的值。example：The sky was a crisp (blue:0.3) and (green:0.8) would convey a sky that was blue and green, but more green than blue."></textarea>
+    </div>
+
+    <div class="negativePrompt-form">
+      <div class="form-group">
+        <label for="negativePrompt">负面描述词(negative Prompt):</label>
+        <textarea id="negativePrompt" rows="5" cols="50" maxlength="10000"
+          placeholder="example：lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality,jpeg artifacts, signature, watermark, username, blurry, bad feet"></textarea>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="aspect_ratio">纵横比(aspect Ratio):</label>
+      <select id="aspect_ratio">
+        <option value="16:9">16:9</option>
+        <option value="1:1">1:1</option>
+        <option value="21:9" selected>21:9</option>
+        <option value="2:3">2:3</option>
+        <option value="3:2">3:2</option>
+        <option value="4:5">4:5</option>
+        <option value="5:4">5:4</option>
+        <option value="9:16">9:16</option>
+        <option value="9:21">9:21</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="mode">模式(mode):</label>
+      <select id="mode" onchange="toggleImageOptions()">
+        <option value="text-to-image" selected>文本到图像(text-to-image)</option>
+        <option value="image-to-image">图像到图像(image-to-image)</option>
+      </select>
+    </div>
+
+    <!-- 文件输入框用于增加image和strength -->
+    <div class="image-options">
+      <div class="form-group">
+        <label for="image">图像文件(image):</label>
+        <input type="file" id="image">
+      </div>
+
+      <div class="form-group">
+        <label for="strength">调整强度(strength) (0.00 - 1.00):</label>
+        <input type="number" id="strength" step="0.01" min="0" max="1">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="seed">随机种子(seed):</label>
+      <input type="number" id="seed" value="0" min="0" max="4294967294">
+    </div>
+
+    <div class="form-group">
+      <label for="model">模型(model):</label>
+      <select id="model">
+        <option value="sd3" selected>Stable Diffusion 3.0(每次生成需要消耗6.5积分)</option>
+        <option value="sd3-turbo">Stable Diffusion 3.0-turbo(每次生成需要消耗4积分)</option>
+        <option value="core">Stable Image Core(每次生成需要消耗3积分)</option>
+      </select>
+    </div>
+
+    <div class="style_preset-options">
+      <div class="form-group">
+        <label for="style_preset">样式预设(style Preset):</label>
+        <select id="style_preset">
+          <option value="3d-model">3d模型(3d-model)</option>
+          <option value="analog-film">模拟电影(analog-film)</option>
+          <option value="anime">动画(anime)</option>
+          <option value="cinematic">电影(cinematic)</option>
+          <option value="comic-book">漫画书(comic-book)</option>
+          <option value="digital-art">数字艺术(digital-art)</option>
+          <option value="enhance" selected>增强(enhance)</option>
+          <option value="fantasy-art">幻想艺术(fantasy-art)</option>
+          <option value="isometric">等距(isometric)</option>
+          <option value="line-art">线艺术(line-art)</option>
+          <option value="low-poly">低聚(low-poly)</option>
+          <option value="modeling-compound">建模复合(modeling-compound)</option>
+          <option value="neon-punk">立体朋克(neon-punk)</option>
+          <option value="origami">折纸(origami)</option>
+          <option value="photographic">摄影(photographic)</option>
+          <option value="pixel-art">像素艺术(pixel-art)</option>
+          <option value="tile-texture">瓷砖纹理(tile-texture)</option>
+        </select>
+      </div>
+    </div>
+
+
+    <div class="form-group">
+      <label for="output_format">输出格式(output Format):</label>
+      <select id="output_format">
+        <option value="jpeg">JPEG</option>
+        <option value="png" selected>PNG</option>
+      </select>
+    </div>
+
+
+
+    <!-- 新增输入框，用于选择生成图片数量 -->
+    <div class="form-group">
+      <label for="num_images">生成图片数量(num Images):</label>
+      <input type="number" id="num_images" value="1" min="1" max="4">
+    </div>
+
+    <button onclick="generateImages()">一键生成(generate Image)</button>
+  </div>
+
+  <div class="right-column">
+    <div class="form-group">
+      <label>生成结果(generate Result):</label>
+      <div id="result"></div>
+    </div>
+  </div>
+
+  <script>
+    const config = {
+      apiKey: '',
+      apiUrl: {
+        core: 'https://api.stability.ai/v2beta/stable-image/generate/core',
+        sd3: 'https://api.stability.ai/v2beta/stable-image/generate/sd3'
+      },
+      balanceUrl: 'https://api.stability.ai/v1/user/balance',
+      pointsElem: '#account-points',
+    };
+
+    function getFormData(index) {
+      const prompt = $('#prompt').val();
+      const negativePrompt = $('#negativePrompt').val();
+      const aspectRatio = $('#aspect_ratio').val();
+      const mode = $('#mode').val();
+      const model = $('#model').val();
+      const stylePreset = $('#style_preset').val();
+      let seed = $('#seed').val();
+      const outputFormat = $('#output_format').val();
+
+      const formData = new FormData();
+      formData.append('prompt', prompt);
+      formData.append('aspect_ratio', aspectRatio);
+
+      if (model === 'sd3' || model === 'sd3-turbo') {
+        formData.append('mode', mode);
+        formData.append('model', model);
+
+        if (mode === 'image-to-image') {
+          const imageFile = $('#image').prop('files')[0];
+          const strength = $('#strength').val();
+
+          formData.append('image', imageFile);
+          formData.append('strength', strength);
+        }
+      }
+
+      if (model === 'sd3' || model === 'core') {
+        formData.append('negative_prompt', negativePrompt);
+      }
+
+      if (model === 'core') {
+        formData.append('style_preset', stylePreset);
+      }
+
+      if (seed !== '0') {
+        seed = parseInt(seed, 10) + index; // 使用循环变量index调整seed值
+        formData.append('seed', seed);
+      }
+
+      // 添加输出格式参数
+      formData.append('output_format', outputFormat);
+
+      return formData;
+    }
+
+    function saveApiKey(apiKey) {
+      if (apiKey.trim()) localStorage.setItem('api_key', apiKey);
+    }
+
+    function checkPoints(apiKey) {
+      if (apiKey.trim() === '') {
+        return
+      }
+      $.ajax({
+        url: 'https://api.stability.ai/v1/user/balance', // 替换为实际的 API URL
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey
+        }
+      })
+        .done(function (data) {
+          if (data.credits < 6.5) {
+            alert('您的 API 密钥积分不足，请充值！');
+          } else {
+            console.log('当前积分：' + data.credits);
+            saveApiKey(apiKey); // 调用 saveApiKey 函数
+          }
+          const points = data.credits;
+          $('#account-points').text('剩余积分：' + points);
+        })
+        .fail(function () {
+          $('#account-points').text('Api密钥错误，无法获取积分信息');
+          console.error('检查余额失败，请检查您的网络连接并重新尝试。');
+        });
+    }
+
+    function toggleImageOptions() {
+      const mode = $('#mode').val();
+      const imageOptionsDiv = $('.image-options');
+
+      imageOptionsDiv.css('display', mode === 'text-to-image' ? 'none' : 'block');
+
+      // 根据模式选择修改模型选项
+      if (mode === 'image-to-image') {
+        $('#model option[value="core"]').prop('disabled', true);
+        if ($('#model').val() === 'core') {
+          $('#model').val('sd3');
+        }
+      } else {
+        $('#model option[value="core"]').prop('disabled', false);
+      }
+    }
+
+    function toggleStylePresetOptions() {
+      const model = $('#model').val();
+      const stylePresetOptionsDiv = $('.style_preset-options');
+
+      stylePresetOptionsDiv.css('display', model === 'core' ? 'block' : 'none');
+    }
+
+    function toggleModelOptions() {
+      const model = $('#model').val();
+
+      // 根据模型选择禁用或启用 negativePrompt
+      const negativePromptFormDiv = document.querySelector('.negativePrompt-form');
+      if (model === 'sd3-turbo') {
+        negativePromptFormDiv.style.display = 'none';
+      } else {
+        negativePromptFormDiv.style.display = 'block';
+      }
+    }
+
+    function handleApiKeyBlur() {
+      const apiKey = $(this).val();
+      if (apiKey) {
+        localStorage.setItem('api_key', apiKey);
+        checkPoints(apiKey);
+      }
+    }
+
+    function generateImages() {
+      const numImages = $('#num_images').val();
+      for (let i = 0; i < numImages; i++) {
+        setTimeout(() => generateImage(i), 100 * i);
+      }
+    }
+
+    function generateImage(index) {
+      const formData = getFormData(index);
+      const model = $('#model').val();
+      const apiKey = $('#api_key').val();
+
+      if (apiKey === "") {
+        alert("请先输入API密钥");
+        return;
+      }
+
+      let apiUrl = config.apiUrl.sd3; // 默认为sd3接口
+      if (model === 'core') {
+        apiUrl = config.apiUrl.core;
+      }
+
+      axios({
+        method: 'post',
+        url: apiUrl,
+        data: formData,
+        headers: {
+          'Authorization': "Bearer " + apiKey,
+          'Accept': 'image/*'
+        },
+        responseType: 'blob'
+      })
+        .then(function (response) {
+          console.log('Image response:', response); // 打印出图片response
+
+          const imageUrl = URL.createObjectURL(response.data);
+          console.log('Image URL:', imageUrl); // 打印出图片URL
+
+          const img = document.createElement('img');
+          img.src = imageUrl;
+          img.style.flex = '1';
+          img.style.width = 'auto';
+          img.style.height = 'auto';
+          // img.style.width = '100%';
+          // img.style.height = '100%';
+          // img.style.objectFit = 'contain';
+
+          console.log('Image element:', img); // 打印出图片元素
+
+
+          // 将图片添加到生成结果区域
+          const resultDiv = $('#result');
+          resultDiv.append(img);
+
+          console.log('Result div:', resultDiv); // 打印出result元素
+
+
+          // 每次成功生成图片后，都重新检查积分
+          checkPoints(apiKey);
+        })
+        .catch(function (error) {
+          let errorMessage = error.message;
+
+          if (error.response && error.response.data) {
+            errorMessage = error.response.data.message || errorMessage;
+          }
+
+          console.error('图片生成出错:', errorMessage);
+          alert('图片生成失败, ' + errorMessage);
+        });
+
+      // $.ajax({
+      //   url: apiUrl,
+      //   type: 'POST',
+      //   data: formData,
+      //   headers: {
+      //     'Authorization': "Bearer " + apiKey,
+      //     'Accept': 'image/*'
+      //   },
+      //   processData: false,
+      //   contentType: false,
+      //   responseType: 'blob', 
+      //   success: function (response, textStatus, xhr) {
+      //     console.log('Image response:', response); // 打印出图片response
+
+      //     const imageUrl = URL.createObjectURL(response.data);
+      //     console.log('Image URL:', imageUrl); // 打印出图片URL
+
+      //     const img = document.createElement('img');
+      //     img.src = imageUrl;
+      //     img.style.maxWidth = '100%';
+      //     img.style.height = 'auto';
+      //     img.style.flex = '1'; // 自适应平铺开
+
+      //     console.log('Image element:', img); // 打印出图片元素
+
+
+      //     // 将图片添加到生成结果区域
+      //     const resultDiv = $('#result');
+      //     resultDiv.append(img);
+
+      //     console.log('Result div:', resultDiv); // 打印出result元素
+
+
+      //     // 每次成功生成图片后，都重新检查积分
+      //     checkPoints(apiKey);
+      //   },
+      //   error: function (xhr, status, error) {
+      //     let errorMessage = "未知错误";
+
+      //     if (xhr.responseJSON && xhr.responseJSON.errors && Array.isArray(xhr.responseJSON.errors)) {
+      //       errorMessage = xhr.responseJSON.errors.join(", ");
+      //     } else if (xhr.responseJSON && xhr.responseJSON.message) {
+      //       errorMessage = xhr.responseJSON.message;
+      //     } else if (xhr.statusText) {
+      //       errorMessage = xhr.statusText;
+      //     }
+
+      //     console.error('图片生成出错:', errorMessage);
+      //     alert('图片生成失败, ' + errorMessage);
+      //   }
+      // });
+
+    }
+
+    $(document).ready(function () {
+      const savedApiKey = localStorage.getItem('api_key');
+      if (savedApiKey) {
+        $('#api_key').val(savedApiKey);
+        checkPoints(savedApiKey);
+      }
+
+      $('#api_key').on('blur', handleApiKeyBlur);
+      $('#mode').on('change', toggleImageOptions);
+      $('#model').on('change', toggleStylePresetOptions);
+      // 在模型选择改变时调用 toggleModelOptions 函数
+      $('#model').on('change', toggleModelOptions);
+
+      // 初始化时也调用一次，以应对初始模型为 'sd3-turbo' 的情况
+      toggleModelOptions();
+    });
+
+
+  </script>
+
+</body>
+
+</html>
