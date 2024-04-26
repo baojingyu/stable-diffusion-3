@@ -279,8 +279,10 @@
 
       const formData = new FormData();
       formData.append('prompt', prompt);
-      formData.append('aspect_ratio', aspectRatio);
 
+      if (mode !== 'image-to-image') {
+        formData.append('aspect_ratio', aspectRatio);
+      }
       if (model === 'sd3' || model === 'sd3-turbo') {
         formData.append('mode', mode);
         formData.append('model', model);
