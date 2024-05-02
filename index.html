@@ -392,8 +392,20 @@
 
     function generateImages() {
       const numImages = $('#num_images').val();
+      const generateButton = $('button'); // 获取提交按钮
+    
+      generateButton.prop('disabled', true); // 在请求开始前禁用按钮
+    
+      let finishedRequests = 0; // 已完成请求的计数器
       for (let i = 0; i < numImages; i++) {
-        setTimeout(() => generateImage(i), 100 * i);
+        setTimeout(() => {
+          generateImage(i).finally(() => { // 使用 finally 确保无论请求成功还是失败都会执行以下代码
+            finishedRequests++; // 每完成一个请求，计数器加1
+            if (finishedRequests === numImages) { // 当所有请求都完成时
+              generateButton.prop('disabled', false); // 重新启用按钮
+            }
+          });
+        }, 100 * i);
       }
     }
 
