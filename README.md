@@ -1,12 +1,14 @@
 # Stable Diffusion 3 API WEB
 
 Stable Diffusion 3.0 图片生成
-
+![image](https://github.com/baojingyu/stable-diffusion-3/assets/31037754/adfc65c7-b349-4b6b-80d6-cd8422fc5d05)
+![image](https://github.com/baojingyu/stable-diffusion-3/assets/31037754/8c0b020f-1aa0-4eec-ad63-0ed26fef5524)
 ![image](https://github.com/baojingyu/stable-diffusion-3/assets/31037754/f5481610-8b93-4206-bdf3-00d755ff19ef)
 
 <img width="1435" alt="image" src="https://github.com/baojingyu/stable-diffusion-3/assets/31037754/8ffcb7d2-989a-4df4-9cd7-842b3688afec">
 <img width="1438" alt="image" src="https://github.com/baojingyu/stable-diffusion-3/assets/31037754/eb6d0b11-1828-4c43-82ff-8c00b2876ed9">
 
+<img width="1439" alt="image" src="https://github.com/baojingyu/stable-diffusion-3/assets/31037754/eff66295-3859-48a7-95d8-49caec827a4f">
 
 
 
