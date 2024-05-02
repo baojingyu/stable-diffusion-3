@@ -1,4 +1,4 @@
-# Stable Diffusion 3 API
+# Stable Diffusion 3 API WEB
 
 Stable Diffusion 3.0 图片生成
 ![image](https://github.com/baojingyu/stable-diffusion-3/assets/31037754/f5481610-8b93-4206-bdf3-00d755ff19ef)
