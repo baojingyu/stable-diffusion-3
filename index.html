@@ -25,8 +25,9 @@
     h1 {
       text-align: center;
       color: #196cea;
-      margin-top: 2px;
-      /* 调整标题与顶部的间距 */
+      margin-top: 1px;
+      font-size: 24px;
+      font-family: 'Courier New', Courier, monospace;
     }
 
     #account-points {
@@ -100,27 +101,41 @@
       margin-bottom: 2px;
     }
 
+
+
     .left-column {
-      width: 45%;
+      width: 20%;
       float: left;
+
     }
 
-    /*占据页面宽度的 45%，并使其向右浮动，并且使用 Flexbox 让其内部元素可以自动换行*/
     .right-column {
-      width: 45%;
+      width: 75%;
       float: right;
-      display: flex;
+      /* display: flex; */
       flex-wrap: wrap;
+      padding-left: 1%;
+      overflow-y: auto;
+      /* 添加垂直滚动条 */
+      justify-content: center;
+      /* 在主轴上居中显示 */
+      align-items: flex-start;
+      /* 在交叉轴上顶部对齐 */
     }
 
-    .right-column .form-group {
-      flex: 1 1 auto;
-      margin: 0px;
+
+
+    #result img {
+      transition: transform 0.25s ease;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+      /* 添加2像素偏移的阴影，颜色为黑色，透明度为0.2 */
+      margin-right: 5px;
+      margin-bottom: 5px;
     }
 
-
-    .clear {
-      clear: both;
+    #result img:hover {
+      transform: scale(1.2);
+      cursor: pointer;
     }
   </style>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -128,44 +143,39 @@
 </head>
 
 <body>
-  <h1>Stable Diffusion 3.0 图片生成</h1>
+  <div id="title">
+    <h1>Stable Diffusion 3.0 图片生成</h1>
+  </div>
+
   <div id="account-points"></div>
-
-
-
   <div class="left-column">
     <div class="form-group">
       <label for="api_key">API密钥(api Key):</label><a href="https://platform.stability.ai/account/keys"
-        target="_blank">点击这里获取API密钥(Click here to get the API key)</a>
+        target="_blank">点击获取API密钥(Click here to get the API key)</a>
       <input type="text" id="api_key" value="">
     </div>
 
     <div class="form-group">
-      <label for="prompt">正面描述词(prompt):</label>
-      <textarea id="prompt" rows="5" cols="50" required maxlength="10000"
-        placeholder="要控制给定单词的权重，请使用格式(word:weight)，其中word是您想要控制权重的单词，weight是介于0和1之间的值。example：The sky was a crisp (blue:0.3) and (green:0.8) would convey a sky that was blue and green, but more green than blue."></textarea>
-    </div>
-
-    <div class="negativePrompt-form">
-      <div class="form-group">
-        <label for="negativePrompt">负面描述词(negative Prompt):</label>
-        <textarea id="negativePrompt" rows="5" cols="50" maxlength="10000"
-          placeholder="example：lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality,jpeg artifacts, signature, watermark, username, blurry, bad feet"></textarea>
-      </div>
+      <label for="model">模型(model):</label>
+      <select id="model">
+        <option value="sd3" selected>Stable Diffusion 3.0(消耗6.5积分)</option>
+        <option value="sd3-turbo">Stable Diffusion 3.0-turbo(消耗4积分)</option>
+        <option value="core">Stable Image Core(消耗3积分)</option>
+      </select>
     </div>
 
     <div class="form-group">
-      <label for="aspect_ratio">纵横比(aspect Ratio):</label>
+      <label for="aspect_ratio">图片比例(aspect Ratio):</label>
       <select id="aspect_ratio">
-        <option value="16:9">16:9</option>
-        <option value="1:1">1:1</option>
-        <option value="21:9" selected>21:9</option>
+        <option value="1:1" selected>1:1</option>
+        <option value="21:9">21:9</option>
         <option value="2:3">2:3</option>
         <option value="3:2">3:2</option>
         <option value="4:5">4:5</option>
         <option value="5:4">5:4</option>
         <option value="9:16">9:16</option>
         <option value="9:21">9:21</option>
+        <option value="16:9">16:9</option>
       </select>
     </div>
 
@@ -193,15 +203,6 @@
     <div class="form-group">
       <label for="seed">随机种子(seed):</label>
       <input type="number" id="seed" value="0" min="0" max="4294967294">
-    </div>
-
-    <div class="form-group">
-      <label for="model">模型(model):</label>
-      <select id="model">
-        <option value="sd3" selected>Stable Diffusion 3.0(每次生成需要消耗6.5积分)</option>
-        <option value="sd3-turbo">Stable Diffusion 3.0-turbo(每次生成需要消耗4积分)</option>
-        <option value="core">Stable Image Core(每次生成需要消耗3积分)</option>
-      </select>
     </div>
 
     <div class="style_preset-options">
@@ -233,25 +234,38 @@
     <div class="form-group">
       <label for="output_format">输出格式(output Format):</label>
       <select id="output_format">
-        <option value="jpeg">JPEG</option>
-        <option value="png" selected>PNG</option>
+        <option value="jpeg" selected>JPEG</option>
+        <option value="png">PNG</option>
       </select>
     </div>
 
+    <div class="form-group">
+      <label for="prompt">正面描述词(prompt):</label>
+      <textarea id="prompt" rows="5" cols="50" required maxlength="10000"
+        placeholder="要控制给定单词的权重，请使用格式(word:weight)，其中word是您想要控制权重的单词，weight是介于0和1之间的值。example：The sky was a crisp (blue:0.3) and (green:0.8) would convey a sky that was blue and green, but more green than blue."></textarea>
+    </div>
+
+    <div class="negativePrompt-form">
+      <div class="form-group">
+        <label for="negativePrompt">负面描述词(negative Prompt):</label>
+        <textarea id="negativePrompt" rows="5" cols="50" maxlength="10000"
+          placeholder="example：lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality,jpeg artifacts, signature, watermark, username, blurry, bad feet"></textarea>
+      </div>
+    </div>
 
 
     <!-- 新增输入框，用于选择生成图片数量 -->
     <div class="form-group">
-      <label for="num_images">生成图片数量(num Images):</label>
+      <label for="num_images">绘图数量(Number of drawings):</label>
       <input type="number" id="num_images" value="1" min="1" max="4">
     </div>
 
-    <button onclick="generateImages()">一键生成(generate Image)</button>
+    <button id="generateButton" onclick="generateImages()">一键生成(generate Image)</button>
   </div>
 
   <div class="right-column">
     <div class="form-group">
-      <label>生成结果(generate Result):</label>
+      <label class="resultLabel" id="resultLabel">生成结果(generate Result):</label>
       <div id="result"></div>
     </div>
   </div>
@@ -390,23 +404,22 @@
       }
     }
 
-    function generateImages() {
-      const numImages = $('#num_images').val();
-      const generateButton = $('button'); // 获取提交按钮
-    
+    async function generateImages() {
+      const generateButton = $('#generateButton'); // 获取生成图片按钮
+
       generateButton.prop('disabled', true); // 在请求开始前禁用按钮
-    
-      let finishedRequests = 0; // 已完成请求的计数器
+
+      const numImages = $('#num_images').val();
+
+      const promises = []; // 创建一个空数组用于存储所有的 Promise
+
       for (let i = 0; i < numImages; i++) {
-        setTimeout(() => {
-          generateImage(i).finally(() => { // 使用 finally 确保无论请求成功还是失败都会执行以下代码
-            finishedRequests++; // 每完成一个请求，计数器加1
-            if (finishedRequests === numImages) { // 当所有请求都完成时
-              generateButton.prop('disabled', false); // 重新启用按钮
-            }
-          });
-        }, 100 * i);
+        promises.push(generateImage(i)); // 将每个请求的 Promise 添加到数组
       }
+
+      await Promise.all(promises); // 使用 Promise.all 等待所有请求完成
+
+      generateButton.prop('disabled', false); // 当所有请求都完成后，重新启用按钮
     }
 
     function generateImage(index) {
@@ -436,28 +449,53 @@
       })
         .then(function (response) {
           console.log('Image response:', response); // 打印出图片response
-
           const imageUrl = URL.createObjectURL(response.data);
-          console.log('Image URL:', imageUrl); // 打印出图片URL
-
           const img = document.createElement('img');
           img.src = imageUrl;
-          img.style.flex = '1';
-          // img.style.width = 'auto';
-          // img.style.height = 'auto';
-          img.style.width = '100%';
-          img.style.height = '100%';
-          img.style.objectFit = 'contain';
-          
+          img.style.width = '20%'; // 设置图片统一宽度
+          img.style.height = 'auto'; // 根据宽度自动调整高度
 
-          console.log('Image element:', img); // 打印出图片元素
+          // 按比例缩放图片
+          const scale = 0.2; // 设置缩放比例
+          img.style.width = (scale * 100) + '%'; // 根据缩放比例调整宽度
+          img.style.height = 'auto'; // 根据宽度自动调整高度
 
+          // 添加鼠标悬停事件监听器
+          img.addEventListener('mouseover', function () {
+            img.style.width = '40%'; // 鼠标悬停时放大显示
+          });
 
-          // 将图片添加到生成结果区域
-          const resultDiv = $('#result');
-          resultDiv.append(img);
+          // 添加鼠标移出事件监听器
+          img.addEventListener('mouseout', function () {
+            img.style.width = '20%'; // 鼠标移出时恢复原始大小
+          });
 
-          console.log('Result div:', resultDiv); // 打印出result元素
+          const resultDiv = document.getElementById('result');
+          resultDiv.appendChild(img);
+
+          img.onclick = function () {
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            modal.style.display = 'flex';
+            modal.style.justifyContent = 'center';
+            modal.style.alignItems = 'center';
+            modal.onclick = function () {
+              document.body.removeChild(modal);
+            };
+
+            const modalImg = document.createElement('img');
+            modalImg.src = imageUrl;
+            modalImg.style.maxWidth = '90%';
+            modalImg.style.maxHeight = '90%';
+
+            modal.appendChild(modalImg);
+            document.body.appendChild(modal);
+          };
 
 
           // 每次成功生成图片后，都重新检查积分
@@ -473,59 +511,6 @@
           console.error('图片生成出错:', errorMessage);
           alert('图片生成失败, ' + errorMessage);
         });
-
-      // $.ajax({
-      //   url: apiUrl,
-      //   type: 'POST',
-      //   data: formData,
-      //   headers: {
-      //     'Authorization': "Bearer " + apiKey,
-      //     'Accept': 'image/*'
-      //   },
-      //   processData: false,
-      //   contentType: false,
-      //   responseType: 'blob', 
-      //   success: function (response, textStatus, xhr) {
-      //     console.log('Image response:', response); // 打印出图片response
-
-      //     const imageUrl = URL.createObjectURL(response.data);
-      //     console.log('Image URL:', imageUrl); // 打印出图片URL
-
-      //     const img = document.createElement('img');
-      //     img.src = imageUrl;
-      //     img.style.maxWidth = '100%';
-      //     img.style.height = 'auto';
-      //     img.style.flex = '1'; // 自适应平铺开
-
-      //     console.log('Image element:', img); // 打印出图片元素
-
-
-      //     // 将图片添加到生成结果区域
-      //     const resultDiv = $('#result');
-      //     resultDiv.append(img);
-
-      //     console.log('Result div:', resultDiv); // 打印出result元素
-
-
-      //     // 每次成功生成图片后，都重新检查积分
-      //     checkPoints(apiKey);
-      //   },
-      //   error: function (xhr, status, error) {
-      //     let errorMessage = "未知错误";
-
-      //     if (xhr.responseJSON && xhr.responseJSON.errors && Array.isArray(xhr.responseJSON.errors)) {
-      //       errorMessage = xhr.responseJSON.errors.join(", ");
-      //     } else if (xhr.responseJSON && xhr.responseJSON.message) {
-      //       errorMessage = xhr.responseJSON.message;
-      //     } else if (xhr.statusText) {
-      //       errorMessage = xhr.statusText;
-      //     }
-
-      //     console.error('图片生成出错:', errorMessage);
-      //     alert('图片生成失败, ' + errorMessage);
-      //   }
-      // });
-
     }
 
     $(document).ready(function () {
